@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
+import * as THREE from "three";
 
 const projects = [
   { name:"COGITO", role:"MARKETING / CONTENT / SOCIAL", copy:"End-to-end brand, content and social execution." },
