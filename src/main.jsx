@@ -16,21 +16,37 @@ function Web({className=""}) {
   return <div className={"web "+className} aria-hidden="true"><i/><i/><i/><i/><i/></div>;
 }
 
-function HeroFigure() {
-  return <div className="hero-figure" aria-hidden="true">
-    <div className="figure-glow"/>
-    <div className="hero-silhouette">
-      <div className="mask">
-        <span className="eye left"/><span className="eye right"/>
-        <div className="mask-web"/>
-      </div>
-      <div className="neck"/>
-      <div className="torso"><div className="chest-web"/><div className="spider-mark"><i/><i/><i/><i/><i/><i/></div></div>
-      <div className="arm arm-left"/><div className="arm arm-right"/>
-      <div className="leg leg-left"/><div className="leg leg-right"/>
-    </div>
-    <div className="figure-shadow"/>
-  </div>
+function ThreeHero(){
+  const ref=React.useRef(null);
+  React.useEffect(()=>{
+    const el=ref.current;if(!el)return;
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(34,el.clientWidth/el.clientHeight,.1,50);
+    camera.position.set(.7,.2,7.5);
+    const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.6));renderer.setSize(el.clientWidth,el.clientHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;el.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0x9fb7df,1.7));
+    const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,6);scene.add(key);
+    const red=new THREE.PointLight(0xd7193f,14,10);red.position.set(3,1,4);scene.add(red);
+    const blue=new THREE.PointLight(0x1677ff,12,10);blue.position.set(-3,0,2);scene.add(blue);
+    const hero=new THREE.Group();hero.position.set(1,-.15,0);scene.add(hero);
+    const R=new THREE.MeshStandardMaterial({color:0xb20d2d,roughness:.55});
+    const B=new THREE.MeshStandardMaterial({color:0x071d3d,roughness:.7});
+    const W=new THREE.MeshBasicMaterial({color:0xf4f7ff});
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.35,8,18),R);body.scale.set(1.05,1.15,.6);body.position.y=.15;hero.add(body);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.54,24,18),R);head.position.y=1.72;head.scale.z=.82;hero.add(head);
+    [-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.16,12,8),W);e.scale.set(.6,1.5,.15);e.position.set(.19*s,1.82,.44);e.rotation.z=.2*s;hero.add(e)});
+    const limb=(m,l,r,x,y,z)=>{const q=new THREE.Mesh(new THREE.CapsuleGeometry(r,l,6,12),m);q.position.set(x,y,0);q.rotation.z=z;hero.add(q)};
+    limb(R,.72,.22,-.92,.42,-.55);limb(R,.72,.22,.92,.42,.55);limb(B,.95,.18,-1.38,-.08,-.85);limb(B,.95,.18,1.38,-.08,.85);limb(B,.9,.27,-.42,-1.45,-.18);limb(B,.9,.27,.42,-1.45,.18);limb(R,1.05,.2,-.54,-2.32,-.25);limb(R,1.05,.2,.54,-2.32,.25);
+    const spiderMat=new THREE.LineBasicMaterial({color:0x02040a});const addLine=(a,b)=>hero.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...a),new THREE.Vector3(...b)]),spiderMat));
+    addLine([0,.3,.62],[0,-.32,.62]);for(let i=0;i<3;i++){const y=.12-i*.17,s=.28-i*.04;addLine([0,y,.62],[-s,y-.1,.62]);addLine([0,y,.62],[s,y-.1,.62])}
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(16,16),new THREE.MeshStandardMaterial({color:0x05070d,roughness:.9}));floor.rotation.x=-Math.PI/2;floor.position.y=-2.95;scene.add(floor);
+    const buildings=new THREE.Group();for(let i=0;i<30;i++){const h=.6+Math.random()*2.5,b=new THREE.Mesh(new THREE.BoxGeometry(.25+Math.random()*.55,h,.35+Math.random()*.5),new THREE.MeshStandardMaterial({color:0x090d16}));b.position.set(-7+i*.48,-2.95+h/2,-2-Math.random()*2);buildings.add(b)}scene.add(buildings);
+    const pointer={x:0,y:0};const move=e=>{pointer.x=e.clientX/innerWidth-.5;pointer.y=e.clientY/innerHeight-.5};const resize=()=>{camera.aspect=el.clientWidth/el.clientHeight;camera.updateProjectionMatrix();renderer.setSize(el.clientWidth,el.clientHeight)};addEventListener("pointermove",move);addEventListener("resize",resize);
+    let id;const tick=()=>{hero.rotation.y+=(pointer.x*.42-.2-hero.rotation.y)*.04;hero.rotation.x+=(-pointer.y*.1-hero.rotation.x)*.04;hero.position.y+=(-.15-scrollY/innerHeight*.35-hero.position.y)*.02;camera.position.x+=(.7+pointer.x*.65-camera.position.x)*.025;camera.lookAt(.2,-.5,0);renderer.render(scene,camera);id=requestAnimationFrame(tick)};tick();
+    return()=>{cancelAnimationFrame(id);removeEventListener("pointermove",move);removeEventListener("resize",resize);renderer.dispose();el.removeChild(renderer.domElement)};
+  },[]);
+  return <div className="three-hero" ref={ref} aria-hidden="true"/>;
 }
 
 function App(){
@@ -59,7 +75,7 @@ function App(){
           <p>I work across marketing strategy, content, social media, operations and production — turning ideas into things people can actually see.</p>
           <a className="cta" href="#work">EXPLORE THE WORK <span>↓</span></a>
         </div>
-        <HeroFigure/>
+        <ThreeHero/>
         <div className="hero-index">01 / 05</div>
         <div className="scroll">SCROLL <span>↓</span></div>
       </section>
